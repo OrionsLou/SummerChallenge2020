@@ -11,6 +11,10 @@ class APIHelper:
         self.game_id = ''
         self.color = ''
 
+        self.is_winner = None
+        self.flip_disk_used = False
+        self.rid_row_used = False
+
     def request_game(self, opponent):
         r = requests.post(self.url + '?opponent=' + opponent,
                           headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
@@ -48,7 +52,18 @@ class APIHelper:
         status_dictionary = {
             'status': r_json['data']['status'],
             'winner': r_json['data']['winner'],
+            'turn': r_json['data']['state']['turn'],
             'imlazy': r_json
         }
+        # Katie updating this
+
+        if status_dictionary['winner'] is not None:
+            if status_dictionary['winner'] == self.color:
+                self.is_winner = True
+            else:
+                self.is_winner = False
+        else:
+            self.is_winner = None
+
         return status_dictionary
 
