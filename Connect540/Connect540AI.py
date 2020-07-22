@@ -42,7 +42,11 @@ while poll:
         if status['turn'] == api.color:
             # check if move is valid
             board.display_board(status['board'])
+
+            # given the current board state, get the column tha has the best move.
+            # this will likely be called over and over again in minimax implementation
             best_move_column = board.get_best_move(status['board'])
+
             is_move_valid = board.is_move_valid(best_move_column, status['board'])
 
             if is_move_valid:
