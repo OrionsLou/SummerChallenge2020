@@ -60,7 +60,6 @@ class APIHelper:
             'turn': r_json['data']['state']['turn'],
             'json': r_json
         }
-        # Katie updating this
 
         if status_dictionary['winner'] is not None:
             if status_dictionary['winner'] == self.color:

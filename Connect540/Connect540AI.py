@@ -2,7 +2,6 @@ from Connect540.APIHelper import APIHelper
 import time
 
 key = 'f3b6ece7451f1a7245d5c9508f47aee9'
-auth = 'insert key here'
 auth = 'Basic ZjNiNmVjZTc0NTFmMWE3MjQ1ZDVjOTUwOGY0N2FlZTk6NTZkM2I1OWI5ZmU2NGZmNWJmYzNjMGE3ODMwYzU2NDg='
 opponent = 'ebot'
 start_time = time.time()
@@ -15,7 +14,7 @@ api = APIHelper(key, auth)
 # Request a new game instance
 api.request_game(opponent)
 print('New game started.')
-# api.request_game(opponent)
+print('Game ID is {}. Player color is {}.'.format(api.game_id, api.color))
 
 # Try making a "flipdisk" move.
 # flipdisk_json = api.flip_disk(5, 3)
