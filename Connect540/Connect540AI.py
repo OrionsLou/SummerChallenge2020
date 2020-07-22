@@ -1,4 +1,5 @@
 from Connect540.APIHelper import APIHelper
+from Connect540.BoardHelper import BoardHelper
 import time
 
 key = 'f3b6ece7451f1a7245d5c9508f47aee9'
@@ -16,6 +17,9 @@ api.request_game(opponent)
 print('New game started.')
 print('Game ID is {}. Player color is {}.'.format(api.game_id, api.color))
 
+# Initialize board helper
+board = BoardHelper(api.color)
+
 # Try making a "flipdisk" move.
 # flipdisk_json = api.flip_disk(5, 3)
 # print('We made a flipdisk move. {}'.format(flipdisk_json))
@@ -30,31 +34,28 @@ while poll:
     status = api.get_game_status()
     poll = True
     print('Game status: {}. Winner: {}.'.format(status['status'], status['winner']))
-    print('Full response: {}'.format(status['json']))
+    # print('Full response: {}'.format(status['json']))
 
     # If no winner, make a move if player's turn.
     if status['winner'] is None:
 
         if status['turn'] == api.color:
             # check if move is valid
-            is_move_valid = api.is_move_valid(3)
+            board.display_board(status['board'])
+            best_move_column = board.get_best_move(status['board'])
+            is_move_valid = board.is_move_valid(best_move_column, status['board'])
 
             if is_move_valid:
-                # Insert decision making process here? For the time being, just do a drop move.
-                drop_json = api.drop(3)
+                drop_json = api.drop(best_move_column)
                 print('We made a drop move. {}'.format(drop_json))
 
             else:
                 print('COLUMN IS FULL')
 
-            # Stop execution for a minute (minus the time taken to get to this point).
+            # Stop execution for a certain amount of time (minus the time taken to get to this point).
             time.sleep(poll_delay - ((time.time() - start_time) % poll_delay))
 
     # Otherwise, game has a winner and we need to exit the loop.
     else:
         print('Did we win? {}'.format(api.is_winner))
         poll = False
-
-# Get valid moves
-# current_board = api.get_game_status()['board']
-# print(current_board)

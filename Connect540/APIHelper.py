@@ -11,6 +11,7 @@ class APIHelper:
         self.auth = auth
         self.game_id = ''
         self.color = ''
+        self.board = None
 
         self.is_winner = None
         self.flip_disk_used = False
@@ -55,11 +56,13 @@ class APIHelper:
         print(r_json)
         status_dictionary = {
             'status': r_json['data']['status'],
-            'board': r_json['data']['state']['board'],
+            'board': numpy.array(r_json['data']['state']['board']),
             'winner': r_json['data']['winner'],
             'turn': r_json['data']['state']['turn'],
             'json': r_json
         }
+
+        self.board = status_dictionary['board']
 
         if status_dictionary['winner'] is not None:
             if status_dictionary['winner'] == self.color:
@@ -70,24 +73,6 @@ class APIHelper:
             self.is_winner = None
 
         return status_dictionary
-
-    def is_move_valid(self, colIndex):
-        updated_board = self.get_game_status()['board']
-        board = numpy.array(updated_board)
-        columnToCheck = board[:, colIndex]
-        print(columnToCheck)
-        openSpot = False
-
-        # column = board[:][column]
-        for slot in columnToCheck:
-            if slot == '-':
-                openSpot = True
-                print('found a spot')
-                break
-
-        return openSpot
-        # for column in zip(updated_board):
-        # do_something(column)
 
 
 
