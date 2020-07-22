@@ -1,7 +1,7 @@
 from Connect540.APIHelper import APIHelper
 
 key = 'f3b6ece7451f1a7245d5c9508f47aee9'
-auth = 'Basic ZjNiNmVjZTc0NTFmMWE3MjQ1ZDVjOTUwOGY0N2FlZTk6NTZkM2I1OWI5ZmU2NGZmNWJmYzNjMGE3ODMwYzU2NDg='
+auth = 'boo'
 opponent = 'ebot'
 
 # Initialize api helper with key and base64 encoded auth string
