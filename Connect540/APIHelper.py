@@ -1,5 +1,6 @@
 import requests
 import json
+import numpy
 
 
 class APIHelper:
@@ -41,19 +42,23 @@ class APIHelper:
 
     def __make_move(self, move_data):
         move_response = requests.post('https://api.sg2020.540.co/fun/games/{}/moves'.format(self.game_id),
-                                      headers={'X-API-Key': self.key, 'Content-Type': 'application/json', 'Accept': 'application/json','Authorization': self.auth},
+                                      headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
+                                               'Accept': 'application/json', 'Authorization': self.auth},
                                       data=move_data)
         return move_response.json()
 
     def get_game_status(self):
         response = requests.get('https://api.sg2020.540.co/fun/games/{}'.format(self.game_id),
-                                headers={'X-API-Key': self.key, 'Content-Type': 'application/json', 'Accept': 'application/json','Authorization': self.auth})
+                                headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
+                                         'Accept': 'application/json', 'Authorization': self.auth})
         r_json = response.json()
+        print(r_json)
         status_dictionary = {
             'status': r_json['data']['status'],
+            'board': r_json['data']['state']['board'],
             'winner': r_json['data']['winner'],
             'turn': r_json['data']['state']['turn'],
-            'imlazy': r_json
+            'json': r_json
         }
         # Katie updating this
 
@@ -66,4 +71,27 @@ class APIHelper:
             self.is_winner = None
 
         return status_dictionary
+
+    def is_move_valid(self, colIndex):
+        updated_board = self.get_game_status()['board']
+        board = numpy.array(updated_board)
+        columnToCheck = board[:, colIndex]
+        print(columnToCheck)
+        openSpot = False
+
+        # column = board[:][column]
+        for slot in columnToCheck:
+            if slot == '-':
+                openSpot = True
+                print('found a spot')
+                break
+
+        return openSpot
+        # for column in zip(updated_board):
+        # do_something(column)
+
+
+
+
+
 
