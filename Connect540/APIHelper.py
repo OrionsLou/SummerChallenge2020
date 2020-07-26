@@ -53,7 +53,7 @@ class APIHelper:
                                 headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
                                          'Accept': 'application/json', 'Authorization': self.auth})
         r_json = response.json()
-        print(r_json)
+        # print(r_json)
         status_dictionary = {
             'status': r_json['data']['status'],
             'board': numpy.array(r_json['data']['state']['board']),
@@ -74,8 +74,8 @@ class APIHelper:
 
         return status_dictionary
 
-
-
-
-
-
+    def delete_game(self):
+        response = requests.delete('https://api.sg2020.540.co/fun/games/{}'.format(self.game_id),
+                                   headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
+                                            'Accept': 'application/json', 'Authorization': self.auth})
+        return response

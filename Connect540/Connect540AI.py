@@ -6,7 +6,7 @@ key = ''
 auth = ''
 opponent = 'ebot'
 start_time = time.time()
-poll_delay = 5
+poll_delay = 1
 poll = True
 
 # Initialize api helper with key and base64 encoded auth string
@@ -18,7 +18,7 @@ print('New game started.')
 print('Game ID is {}. Player color is {}.'.format(api.game_id, api.color))
 
 # Initialize board helper
-board = BoardHelper(api.color)
+board_helper = BoardHelper(api.color)
 
 # Try making a "flipdisk" move.
 # flipdisk_json = api.flip_disk(5, 3)
@@ -32,6 +32,7 @@ board = BoardHelper(api.color)
 while poll:
 
     status = api.get_game_status()
+    current_board = status['board']
     poll = True
     print('Game status: {}. Winner: {}.'.format(status['status'], status['winner']))
     # print('Full response: {}'.format(status['json']))
@@ -41,13 +42,13 @@ while poll:
 
         if status['turn'] == api.color:
             # check if move is valid
-            board.display_board(status['board'])
+            board_helper.display_board(status['board'])
 
             # given the current board state, get the column tha has the best move.
             # this will likely be called over and over again in minimax implementation
-            best_move_column = board.get_best_move(status['board'])
+            best_move_column = board_helper.get_best_move(current_board)
 
-            is_move_valid = board.is_move_valid(best_move_column, status['board'])
+            is_move_valid = board_helper.is_move_valid(best_move_column, current_board)
 
             if is_move_valid:
                 drop_json = api.drop(best_move_column)
@@ -56,10 +57,14 @@ while poll:
             else:
                 print('COLUMN IS FULL')
 
-            # Stop execution for a certain amount of time (minus the time taken to get to this point).
-            time.sleep(poll_delay - ((time.time() - start_time) % poll_delay))
+        # Stop execution for a certain amount of time (minus the time taken to get to this point).
+        time.sleep(poll_delay - ((time.time() - start_time) % poll_delay))
 
     # Otherwise, game has a winner and we need to exit the loop.
     else:
+        board_helper.display_board(current_board)
         print('Did we win? {}'.format(api.is_winner))
         poll = False
+
+# Game over. Delete game.
+print(api.delete_game())
