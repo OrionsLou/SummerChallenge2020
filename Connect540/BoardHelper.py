@@ -109,8 +109,6 @@ class BoardHelper:
         return best_move.column_index
 
     def __evaluate_move(self, board, column_index):
-        # This is a good place to add scoring logic
-        # e.g. what decides what numerical value each possible move has
         score = 0
 
         if self.is_move_valid(column_index, board):
@@ -119,13 +117,9 @@ class BoardHelper:
                 score += Score.CENTER.value
 
             score += self.__calculate_score(board, column_index, False)
-
-            # Temporary testing - add random value to score to produce different results.
-            # score += random.randint(0, 3)
         else:
             return None
 
-        # Do some calculations, then return column index and its score.
         return Result(column_index, score)
 
     def __calculate_score(self, board, column_index, is_enemy):
@@ -136,17 +130,15 @@ class BoardHelper:
 
         # Review the column for the current move being analyzed
         score += self.__review_column_connections(board[:, column_index], row_index, is_enemy)
-        # print('{} column connections. Is Enemy {}'.format(col_connections, is_enemy))
 
         # Review the row for the current move being analyzed IF dropping a move will land on this row
         score += self.__review_row_connections(board[row_index, :], column_index, is_enemy)
-        # print('{} row connections. Is Enemy {}'.format(row_connections, is_enemy))
 
         # Review the positive diagonal
-        # todo
+        score += self.__review_positive_diagonal(is_enemy, row_index, column_index, board)
 
         # Review the negative diagonal
-        # todo
+        score += self.__review_negative_diagonal(is_enemy, row_index, column_index, board)
 
         # Review flip disk
         # todo
@@ -288,4 +280,131 @@ class BoardHelper:
 
         # print('row! row {}'.format(row))
         # print('row! row score {}'.format(max_score))
+        return max_score
+
+    def __review_positive_diagonal(self, is_enemy, row_index, col_index, board):
+        player = self.enemy_color if is_enemy else self.color
+
+        # print('Row {} Column {}'.format(row_index, col_index))
+
+        # Determine number of rows above available to review given current column
+        row_offset = min(3, (6 - col_index))
+        min_row_index = max(row_index - row_offset, 0)
+
+        # Determine number of rows below available to review given current column
+        row_offset = min(3, col_index)
+        max_row_index = min(row_index + row_offset, 5)
+
+        # Determine number of columns available to review to the left given current row level
+        column_offset = min(3, (5 - row_index))
+        min_col_index = max(col_index - column_offset, 0)
+
+        # Determine number of columns available to review to the right given current row level
+        column_offset = min(3, row_index)
+        max_col_index = min(col_index + column_offset, 6)
+
+        max_score = 0
+
+        while max_row_index - 3 >= min_row_index and min_col_index + 3 <= max_col_index:
+            num_connections = 0
+            enemy_connections = 0
+
+            for offset in range(0, 4):
+                current_row_index = max_row_index - offset
+                current_col_index = min_col_index + offset
+
+                # print('at row {} and column {}'.format(current_row_index, current_col_index))
+
+                current_element = board[current_row_index, current_col_index]
+
+                # print('Current element: {} '.format(current_element))
+
+                if row_index == current_row_index and col_index == current_col_index:
+                    num_connections += 1
+                elif current_element == player:
+                    num_connections += 1
+                elif current_element == '-':
+                    continue
+                else:
+                    enemy_connections += 1
+
+            # If there are any enemy discs in this 4-cell combo, then we can't do a winning move on this diagonal.
+            # print('player {} enemy {}'.format(num_connections, enemy_connections))
+            if enemy_connections == 0:
+                score = self.__map_connection_to_score(num_connections, 0)
+            else:
+                score = self.__map_connection_to_score(0, enemy_connections)
+
+            # print('current positive diagonal score: {}'.format(score))
+            max_score = max(max_score, score)
+
+            max_row_index -= 1
+            min_col_index += 1
+
+        # print('positive diagonal score {}'.format(max_score))
+        return max_score
+
+    def __review_negative_diagonal(self, is_enemy, row_index, col_index, board):
+        player = self.enemy_color if is_enemy else self.color
+
+        # print('Row {} Column {}'.format(row_index, col_index))
+
+        # Determine number of rows above available to review given current column
+        row_offset = min(3, col_index)
+        min_row_index = max(row_index - row_offset, 0)
+
+        # Determine number of rows below available to review given current column
+        row_offset = min(3, (6 - col_index))
+        max_row_index = min(row_index + row_offset, 5)
+
+        # Determine number of columns available to review to the left given current row level
+        column_offset = min(3, row_index)
+        min_col_index = max(col_index - column_offset, 0)
+
+        # Determine number of columns available to review to the right given current row level
+        column_offset = min(3, (5 - row_index))
+        max_col_index = min(col_index + column_offset, 6)
+
+        # print('Min row {} max row {}'.format(min_row_index, max_row_index))
+        # print('Min col {} max col {}'.format(min_col_index, max_col_index))
+
+        max_score = 0
+
+        while min_row_index + 3 <= max_row_index and min_col_index + 3 <= max_col_index:
+            num_connections = 0
+            enemy_connections = 0
+
+            for offset in range(0, 4):
+                current_row_index = min_row_index + offset
+                current_col_index = min_col_index + offset
+
+                # print('at row {} and column {}'.format(current_row_index, current_col_index))
+
+                current_element = board[current_row_index, current_col_index]
+
+                # print('Current element: {} '.format(current_element))
+
+                if row_index == current_row_index and col_index == current_col_index:
+                    num_connections += 1
+                elif current_element == player:
+                    num_connections += 1
+                elif current_element == '-':
+                    continue
+                else:
+                    enemy_connections += 1
+
+            # If there are any enemy discs in this 4-cell combo, then we can't do a winning move on this diagonal.
+            # print('player {} enemy {}'.format(num_connections, enemy_connections))
+            if enemy_connections == 0:
+                score = self.__map_connection_to_score(num_connections, 0)
+            else:
+                score = self.__map_connection_to_score(0, enemy_connections)
+
+            # print('current negative diagonal score: {}'.format(score))
+            max_score = max(max_score, score)
+
+            min_row_index += 1
+            min_col_index += 1
+
+        # print('negative diagonal score {}'.format(max_score))
         return max_score
