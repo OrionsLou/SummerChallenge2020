@@ -1,5 +1,6 @@
 import requests
 import json
+import numpy
 
 
 class APIHelper:
@@ -10,6 +11,7 @@ class APIHelper:
         self.auth = auth
         self.game_id = ''
         self.color = ''
+        self.board = None
 
         self.is_winner = None
         self.flip_disk_used = False
@@ -41,21 +43,26 @@ class APIHelper:
 
     def __make_move(self, move_data):
         move_response = requests.post('https://api.sg2020.540.co/fun/games/{}/moves'.format(self.game_id),
-                                      headers={'X-API-Key': self.key, 'Content-Type': 'application/json', 'Accept': 'application/json','Authorization': self.auth},
+                                      headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
+                                               'Accept': 'application/json', 'Authorization': self.auth},
                                       data=move_data)
         return move_response.json()
 
     def get_game_status(self):
         response = requests.get('https://api.sg2020.540.co/fun/games/{}'.format(self.game_id),
-                                headers={'X-API-Key': self.key, 'Content-Type': 'application/json', 'Accept': 'application/json','Authorization': self.auth})
+                                headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
+                                         'Accept': 'application/json', 'Authorization': self.auth})
         r_json = response.json()
+        # print(r_json)
         status_dictionary = {
             'status': r_json['data']['status'],
+            'board': numpy.array(r_json['data']['state']['board']),
             'winner': r_json['data']['winner'],
             'turn': r_json['data']['state']['turn'],
-            'imlazy': r_json
+            'json': r_json
         }
-        # Katie updating this
+
+        self.board = status_dictionary['board']
 
         if status_dictionary['winner'] is not None:
             if status_dictionary['winner'] == self.color:
@@ -67,3 +74,8 @@ class APIHelper:
 
         return status_dictionary
 
+    def delete_game(self):
+        response = requests.delete('https://api.sg2020.540.co/fun/games/{}'.format(self.game_id),
+                                   headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
+                                            'Accept': 'application/json', 'Authorization': self.auth})
+        return response
