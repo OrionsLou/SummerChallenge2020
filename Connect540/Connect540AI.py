@@ -4,21 +4,23 @@ import time
 
 key = ''
 auth = ''
-opponent = 'ebot'
+opponent = 'tbot'
+official = False
 start_time = time.time()
 poll_delay = 1
 poll = True
+depth = 5
 
 # Initialize api helper with key and base64 encoded auth string
 api = APIHelper(key, auth)
 
 # Request a new game instance
-api.request_game(opponent)
+api.request_game(official, opponent)
 print('New game started.')
 print('Game ID is {}. Player color is {}.'.format(api.game_id, api.color))
 
 # Initialize board helper
-board_helper = BoardHelper(api.color)
+board_helper = BoardHelper(api.color, depth)
 
 # Try making a "flipdisk" move.
 # flipdisk_json = api.flip_disk(5, 3)
@@ -46,7 +48,7 @@ while poll:
 
             # given the current board state, get the column tha has the best move.
             # this will likely be called over and over again in minimax implementation
-            best_move_column = board_helper.get_best_move(current_board)
+            best_move_column = board_helper.get_best_move(current_board).column_index
 
             is_move_valid = board_helper.is_move_valid(best_move_column, current_board)
 

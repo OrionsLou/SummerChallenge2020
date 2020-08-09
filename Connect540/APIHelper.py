@@ -17,14 +17,16 @@ class APIHelper:
         self.flip_disk_used = False
         self.rid_row_used = False
 
-    def request_game(self, opponent):
-        r = requests.post(self.url + '?opponent=' + opponent,
+    def request_game(self, official, opponent):
+        payload = json.dumps({"data": {"opponent": opponent, "official": official}})
+        r = requests.post(self.url,
                           headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
-                                   'Accept': 'application/json',
-                                   'Authorization': self.auth})
+                                   'Accept': 'application/json', 'Authorization': self.auth},
+                          data=payload)
         response_json = r.json()
         self.game_id = response_json['data']['_id']
         self.color = 'yellow' if self.key == response_json['data']['yellow'] else 'red'
+        print("Requested game against {}.".format(opponent))
 
     def drop(self, column):
         move_data = json.dumps({'data': {'type': 'drop', 'column': column}})
@@ -53,7 +55,7 @@ class APIHelper:
                                 headers={'X-API-Key': self.key, 'Content-Type': 'application/json',
                                          'Accept': 'application/json', 'Authorization': self.auth})
         r_json = response.json()
-        # print(r_json)
+        print(r_json)
         status_dictionary = {
             'status': r_json['data']['status'],
             'board': numpy.array(r_json['data']['state']['board']),
