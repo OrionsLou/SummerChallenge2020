@@ -1,7 +1,7 @@
 from multiprocessing.pool import ThreadPool
 from enum import Enum
 import copy
-
+import numpy
 
 # Simple enumeration to hold scores.
 class Score(Enum):
@@ -55,6 +55,71 @@ class BoardHelper:
     def display_board(self, board):
         for row in board:
             print(row)
+
+    def rid_row_evaluation(self, board, row_index):
+        board1 = copy.deepcopy(board)
+        #row = board[row_index,:]
+        print("rid row eval kicked")
+    
+            
+        numpy.delete(board1, row_index, axis=0);
+        #a[np.all(a != 0, axis=1)]
+        print('ridrow attempt')
+        self.display_board(board1)
+
+        bestMove = self.get_best_move_ridRow(board1)
+        return bestMove
+     
+    def get_best_move_ridRow(self, board):
+        pool = ThreadPool(processes=7)
+        results = []
+
+        # Minimax evaluation
+        print('checking moves if ridrow is applied')
+        proc1 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 0, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc2 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 1, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc3 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 2, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc4 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 3, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc5 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 4, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc6 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 5, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc7 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 6, self.__depth, False, self.__negative_inf, self.__positive_inf))
+
+        # Wait for the processes to finish and get results.
+        result1 = proc1.get()
+        result2 = proc2.get()
+        result3 = proc3.get()
+        result4 = proc4.get()
+        result5 = proc5.get()
+        result6 = proc6.get()
+        result7 = proc7.get()
+
+        # Don't review results where the move is invalid (no result)
+        if result1 is not None:
+            results.append(result1)
+        if result2 is not None:
+            results.append(result2)
+        if result3 is not None:
+            results.append(result3)
+        if result4 is not None:
+            results.append(result4)
+        if result5 is not None:
+            results.append(result5)
+        if result6 is not None:
+            results.append(result6)
+        if result7 is not None:
+            results.append(result7)
+        
+
+        # Find the best move.
+        best_move = None
+        for result in results:
+            if best_move is None or result.score > best_move.score:
+                best_move = result
+
+
+        # Return column index with the best move.
+        print('Best move is for ridrow board is column {} with score {}.'.format(best_move.column_index, best_move.score))
+        return best_move
 
     def get_best_move(self, board):
         pool = ThreadPool(processes=7)
@@ -113,11 +178,20 @@ class BoardHelper:
         if result7 is not None:
             results.append(result7)
 
+        for i in range(board.shape[0]):
+            if ~numpy.all(board[i]==board[i][0]):
+                print('row filled?: ', i)
+                results.append(self.rid_row_evaluation(board,i))
+
         # Find the best move.
         best_move = None
-        for result in results:
+
+        for index, result in enumerate(results):
             if best_move is None or result.score > best_move.score:
-                best_move = result
+                if index==7 or index==8 or index==9:
+                    print('need to do rid row')
+                else:
+                    best_move = result
 
         # Return column index with the best move.
         print('Best move is column {} with score {}.'.format(best_move.column_index, best_move.score))
