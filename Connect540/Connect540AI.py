@@ -2,8 +2,8 @@ from APIHelper import APIHelper
 from BoardHelper import BoardHelper
 import time
 
-key = 'cf1bcc67f97b26be9d5f32e820cdade7'
-auth = 'Basic Y2YxYmNjNjdmOTdiMjZiZTlkNWYzMmU4MjBjZGFkZTc6YTlhYjc1NDI2NTI0YWZmODQ1ODFlYWMxYWViYjNiNWQ='
+key = ''
+auth = ''
 opponent = 'tbot'
 official = False
 start_time = time.time()
