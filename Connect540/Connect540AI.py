@@ -2,14 +2,15 @@ from Connect540.APIHelper import APIHelper
 from Connect540.BoardHelper import BoardHelper
 import time
 
-key = ''
-auth = ''
+key = 'f3b6ece7451f1a7245d5c9508f47aee9'
+auth = 'Basic ZjNiNmVjZTc0NTFmMWE3MjQ1ZDVjOTUwOGY0N2FlZTk6NTZkM2I1OWI5ZmU2NGZmNWJmYzNjMGE3ODMwYzU2NDg='
+
 opponent = 'tbot'
 official = False
 start_time = time.time()
 poll_delay = 1
 poll = True
-depth = 5
+depth = 4
 
 # Initialize api helper with key and base64 encoded auth string
 api = APIHelper(key, auth)

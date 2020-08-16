@@ -15,9 +15,11 @@ class Score(Enum):
 
 class Result:
 
-    def __init__(self, column_index, score):
+    def __init__(self, column_index, score, board_state, is_enemy):
         self.column_index = column_index
         self.score = score
+        self.is_enemy = is_enemy
+        self.board_state = board_state
 
 
 class BoardHelper:
@@ -57,8 +59,8 @@ class BoardHelper:
             print(row)
 
     def get_best_move(self, board):
-        pool = ThreadPool(processes=7)
-        results = []
+        # pool = ThreadPool(processes=7)
+        # results = []
 
         # Non-minimax evaluation
         # proc1 = pool.apply_async(self.__evaluate_move, (board, 0, False))
@@ -70,23 +72,23 @@ class BoardHelper:
         # proc7 = pool.apply_async(self.__evaluate_move, (board, 6, False))
 
         # Minimax evaluation
-        print('Getting next set of moves')
-        proc1 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 0, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc2 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 1, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc3 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 2, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc4 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 3, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc5 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 4, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc6 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 5, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc7 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 6, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        # print('Getting next set of moves')
+        # proc1 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 0, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        # proc2 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 1, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        # proc3 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 2, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        # proc4 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 3, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        # proc5 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 4, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        # proc6 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 5, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        # proc7 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 6, self.__depth, False, self.__negative_inf, self.__positive_inf))
 
         # Wait for the processes to finish and get results.
-        result1 = proc1.get()
-        result2 = proc2.get()
-        result3 = proc3.get()
-        result4 = proc4.get()
-        result5 = proc5.get()
-        result6 = proc6.get()
-        result7 = proc7.get()
+        # result1 = proc1.get()
+        # result2 = proc2.get()
+        # result3 = proc3.get()
+        # result4 = proc4.get()
+        # result5 = proc5.get()
+        # result6 = proc6.get()
+        # result7 = proc7.get()
 
         # These lines are for testing only. Performs evaluations one at a time. Easier to read debug lines.
         # result1 = self.__evaluate_move(board, 0, False)
@@ -98,26 +100,31 @@ class BoardHelper:
         # result7 = self.__evaluate_move(board, 6, False)
 
         # Don't review results where the move is invalid (no result)
-        if result1 is not None:
-            results.append(result1)
-        if result2 is not None:
-            results.append(result2)
-        if result3 is not None:
-            results.append(result3)
-        if result4 is not None:
-            results.append(result4)
-        if result5 is not None:
-            results.append(result5)
-        if result6 is not None:
-            results.append(result6)
-        if result7 is not None:
-            results.append(result7)
+        # if result1 is not None:
+        #     results.append(result1)
+        # if result2 is not None:
+        #     results.append(result2)
+        # if result3 is not None:
+        #     results.append(result3)
+        # if result4 is not None:
+        #     results.append(result4)
+        # if result5 is not None:
+        #     results.append(result5)
+        # if result6 is not None:
+        #     results.append(result6)
+        # if result7 is not None:
+        #     results.append(result7)
 
         # Find the best move.
-        best_move = None
-        for result in results:
-            if best_move is None or result.score > best_move.score:
-                best_move = result
+        # best_move = None
+        # for result in results:
+        #     if best_move is None or result.score > best_move.score:
+        #         best_move = result
+
+        # Start minimax.
+        print("Start minimax")
+        # self.display_board(board)
+        best_move = self.__maximizing(board, self.__depth)
 
         # Return column index with the best move.
         print('Best move is column {} with score {}.'.format(best_move.column_index, best_move.score))
@@ -138,7 +145,7 @@ class BoardHelper:
         else:
             return None
 
-        return Result(column_index, score)
+        return Result(column_index, score, copy.deepcopy(board), is_enemy)
 
     def __evaluate_move_minimax(self, board, column_index, tree_depth, is_enemy, alpha, beta):
         # Determine whether or not this column has an open space
@@ -205,6 +212,103 @@ class BoardHelper:
                 # print('Worst position for {} is column {} with score {}'.format(player, worst_position.column_index, worst_position.score))
                 return worst_position
 
+    def __maximizing(self, board, tree_depth):
+        best_move = None
+
+        # Loop through columns to review moves
+        for col_index in range(0, 7):
+
+            move = self.__evaluate_move(board, col_index, False)
+
+            # Is this an invalid move? If so, don't bother reviewing.
+            if move is None:
+                continue
+
+            # Do we win at this move? If so return, winning move.
+            elif move.score >= Score.WIN.value:
+                # print("Go for the win")
+                return move
+
+            # Will this block the enemy from winning next turn? If so, return blocking move.
+            elif Score.OPP_LINE_OF_THREE.value <= move.score < Score.WIN.value:
+                # print("Block enemy win")
+                return move
+
+            # Did we hit maximum depth? If so, compare to current best move.
+            elif tree_depth == 0:
+                # available_row_index = self.__get_drop_row_index(board, col_index)
+                # print("Hit max depth at row {} and col {}".format(available_row_index, col_index))
+                # board_copy = copy.deepcopy(board)
+                # board_copy[available_row_index, col_index] = self.color
+                # self.display_board(board_copy)
+
+                # if best_move is not None:
+                #     print("Best move at col {} score {}".format(best_move.column_index, best_move.score))
+                #
+                # if move is not None:
+                #     print("Current move at col {} score {}".format(move.column_index, move.score))
+
+                if best_move is None or move.score >= best_move.score:
+                    best_move = move
+
+            # Otherwise, let's look through the opponent's possible next moves.
+            else:
+
+                # Get the available row index for this column.
+                available_row_index = self.__get_drop_row_index(board, col_index)
+
+                # Copy the board and simulate our move.
+                # print("Simulating move at row {} and column {}.".format(available_row_index, col_index))
+                board_copy = copy.deepcopy(board)
+                board_copy[available_row_index, col_index] = self.color
+                # self.display_board(board_copy)
+
+                # Start the minimax evaluation.
+                local_move = self.__minimizing(board_copy, tree_depth)
+                if local_move is not None and (best_move is None or local_move.score >= best_move.score):
+                    best_move = local_move
+
+        # print("Maximized move at col {} score {}".format(best_move.column_index, best_move.score))
+        # self.display_board(best_move.board_state)
+        return best_move
+
+    def __minimizing(self, board, tree_depth):
+        minimized_move = None
+
+        # Loop through current state of board and determine enemy moves.
+        for col_index in range(0, 7):
+
+            # Skip over this move if not valid.
+            move = self.__evaluate_move(board, col_index, True)
+            if move is None:
+                continue
+            else:
+
+                # Make a copy of the board and simulate the move.
+                available_row_index = self.__get_drop_row_index(board, col_index)
+                # print("Simulating enemy move at row {} and column {}.".format(available_row_index, col_index))
+                board_copy = copy.deepcopy(board)
+                board_copy[available_row_index, col_index] = self.enemy_color
+                # self.display_board(board_copy)
+
+                # Run the maximizing function to get our AI's possible moves.
+                # print("Next maximize call.")
+                local_move = self.__maximizing(board_copy, tree_depth - 1)
+
+                # if minimized_move is not None:
+                #     print("Global min move at {} score {}".format(minimized_move.column_index, minimized_move.score))
+                #
+                # if local_move is not None:
+                #     print("Current min move at col {} score {}".format(local_move.column_index, local_move.score))
+
+                # Track which enemy move results in a move with lowest possible score for our AI.
+                if local_move is not None and (minimized_move is None or local_move.score <= minimized_move.score):
+                    minimized_move = local_move
+
+        # print("Minimized move at col {} score {} enemy {}".format(minimized_move.column_index, minimized_move.score, minimized_move.is_enemy))
+        # self.display_board(minimized_move.board_state)
+        return minimized_move
+
     def __calculate_score(self, board, column_index, is_enemy):
         score = 0
 
@@ -215,7 +319,7 @@ class BoardHelper:
         score += self.__review_column_connections(board[:, column_index], row_index, is_enemy)
 
         # Review the row for the current move being analyzed IF dropping a move will land on this row
-        score += self.__review_row_connections(board[row_index, :], column_index, is_enemy)
+        score += self.__review_row_connections(board, row_index, column_index, is_enemy)
 
         # Review the positive diagonal
         score += self.__review_positive_diagonal(is_enemy, row_index, column_index, board)
@@ -321,8 +425,9 @@ class BoardHelper:
         # print('col! column score {}'.format(score))
         return score
 
-    def __review_row_connections(self, row, col_index, is_enemy):
+    def __review_row_connections(self, board, row_index, col_index, is_enemy):
         player = self.enemy_color if is_enemy else self.color
+        row = board[row_index, :]
 
         # Determine the window of cells we need to review.
         min_index = 0 if col_index - 3 <= 0 else col_index - 3
@@ -334,6 +439,7 @@ class BoardHelper:
             # print('new combo')
             num_connections = 0
             enemy_connections = 0
+            landed_row_index = None
             for offset in range(0, 4):
                 current_index = min_index + offset
                 # print(row[current_index])
@@ -344,10 +450,15 @@ class BoardHelper:
                     # print('{} == {}'.format(row[current_index], player))
                     num_connections += 1
                 elif row[current_index] == '-':
-                    # print('empty')
+                    # determine if this is an available move (e.g. dropping a disc lands at this cell)
+                    landed_row_index = self.__get_drop_row_index(board, current_index)
                     continue
                 else:
                     enemy_connections += 1
+
+            # If there's open cell in this 4-cell combo, but cell is not on this row, then connections don't matter.
+            if landed_row_index is not None and landed_row_index != row_index:
+                num_connections = 0
 
             # If there are any enemy discs in this 4-cell combo, then we can't do a winning move on this row.
             # print('row! col {} player {} enemy {}'.format(col_index, num_connections, enemy_connections))
@@ -407,6 +518,10 @@ class BoardHelper:
                 elif current_element == player:
                     num_connections += 1
                 elif current_element == '-':
+                    landed_row_index = self.__get_drop_row_index(board, current_col_index)
+                    if landed_row_index != current_row_index:
+                        num_connections = 0
+                        enemy_connections = 0
                     continue
                 else:
                     enemy_connections += 1
@@ -472,6 +587,10 @@ class BoardHelper:
                 elif current_element == player:
                     num_connections += 1
                 elif current_element == '-':
+                    landed_row_index = self.__get_drop_row_index(board, current_col_index)
+                    if landed_row_index != current_row_index:
+                        num_connections = 0
+                        enemy_connections = 0
                     continue
                 else:
                     enemy_connections += 1
