@@ -215,7 +215,7 @@ class BoardHelper:
         score += self.__review_column_connections(board[:, column_index], row_index, is_enemy)
 
         # Review the row for the current move being analyzed IF dropping a move will land on this row
-        score += self.__review_row_connections(board[row_index, :], column_index, is_enemy)
+        score += self.__review_row_connections(board, row_index, column_index, is_enemy)
 
         # Review the positive diagonal
         score += self.__review_positive_diagonal(is_enemy, row_index, column_index, board)
@@ -321,8 +321,9 @@ class BoardHelper:
         # print('col! column score {}'.format(score))
         return score
 
-    def __review_row_connections(self, row, col_index, is_enemy):
+    def __review_row_connections(self, board, row_index, col_index, is_enemy):
         player = self.enemy_color if is_enemy else self.color
+        row = board[row_index, :]
 
         # Determine the window of cells we need to review.
         min_index = 0 if col_index - 3 <= 0 else col_index - 3
@@ -334,6 +335,7 @@ class BoardHelper:
             # print('new combo')
             num_connections = 0
             enemy_connections = 0
+            landed_row_index = None
             for offset in range(0, 4):
                 current_index = min_index + offset
                 # print(row[current_index])
@@ -344,10 +346,15 @@ class BoardHelper:
                     # print('{} == {}'.format(row[current_index], player))
                     num_connections += 1
                 elif row[current_index] == '-':
-                    # print('empty')
+                    # determine if this is an available move (e.g. dropping a disc lands at this cell)
+                    landed_row_index = self.__get_drop_row_index(board, current_index)
                     continue
                 else:
                     enemy_connections += 1
+
+            # If there's open cell in this 4-cell combo, but cell is not on this row, then connections don't matter.
+            if landed_row_index is not None and landed_row_index != row_index:
+                num_connections = 0
 
             # If there are any enemy discs in this 4-cell combo, then we can't do a winning move on this row.
             # print('row! col {} player {} enemy {}'.format(col_index, num_connections, enemy_connections))
@@ -407,6 +414,10 @@ class BoardHelper:
                 elif current_element == player:
                     num_connections += 1
                 elif current_element == '-':
+                    landed_row_index = self.__get_drop_row_index(board, current_col_index)
+                    if landed_row_index != current_row_index:
+                        num_connections = 0
+                        enemy_connections = 0
                     continue
                 else:
                     enemy_connections += 1
@@ -472,6 +483,10 @@ class BoardHelper:
                 elif current_element == player:
                     num_connections += 1
                 elif current_element == '-':
+                    landed_row_index = self.__get_drop_row_index(board, current_col_index)
+                    if landed_row_index != current_row_index:
+                        num_connections = 0
+                        enemy_connections = 0
                     continue
                 else:
                     enemy_connections += 1

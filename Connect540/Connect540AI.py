@@ -2,9 +2,9 @@ from Connect540.APIHelper import APIHelper
 from Connect540.BoardHelper import BoardHelper
 import time
 
-key = ''
-auth = ''
-opponent = 'tbot'
+key = 'f3b6ece7451f1a7245d5c9508f47aee9'
+auth = 'Basic ZjNiNmVjZTc0NTFmMWE3MjQ1ZDVjOTUwOGY0N2FlZTk6NTZkM2I1OWI5ZmU2NGZmNWJmYzNjMGE3ODMwYzU2NDg='
+opponent = 'ebot'
 official = False
 start_time = time.time()
 poll_delay = 1
