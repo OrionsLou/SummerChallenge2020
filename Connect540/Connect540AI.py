@@ -1,9 +1,9 @@
-from Connect540.APIHelper import APIHelper
-from Connect540.BoardHelper import BoardHelper
+from APIHelper import APIHelper
+from BoardHelper import BoardHelper
 import time
 
-key = ''
-auth = ''
+key = 'cf1bcc67f97b26be9d5f32e820cdade7'
+auth = 'Basic Y2YxYmNjNjdmOTdiMjZiZTlkNWYzMmU4MjBjZGFkZTc6YTlhYjc1NDI2NTI0YWZmODQ1ODFlYWMxYWViYjNiNWQ='
 opponent = 'tbot'
 official = False
 start_time = time.time()
@@ -37,6 +37,10 @@ while poll:
     current_board = status['board']
     poll = True
     print('Game status: {}. Winner: {}.'.format(status['status'], status['winner']))
+    is_ridrow_available = board_helper.ridRowUsed(status['moves'])
+    is_flipdisk_available = board_helper.flipDiskUsed(status['moves'])
+
+   # print('moves: {}'.format(moves))
     # print('Full response: {}'.format(status['json']))
 
     # If no winner, make a move if player's turn.
@@ -46,15 +50,28 @@ while poll:
             # check if move is valid
             board_helper.display_board(status['board'])
 
+
+            #ridrowUsed = board_helper.ridRowUsed(moves)
+            # if ridrowUsed is True:
+            #     print("already used ridRow")
+            # else:  
+            #     print("ridRow move available")
+            
             # given the current board state, get the column tha has the best move.
             # this will likely be called over and over again in minimax implementation
-            best_move_column = board_helper.get_best_move(current_board).column_index
+            best_move = board_helper.get_best_move(current_board, is_ridrow_available,is_flipdisk_available)
+            best_move_column = best_move.column_index
+      
 
             is_move_valid = board_helper.is_move_valid(best_move_column, current_board)
 
             if is_move_valid:
-                drop_json = api.drop(best_move_column)
-                print('We made a drop move. {}'.format(drop_json))
+                if best_move.action == 'ridrow':
+                    print('We will make a ridrow move for row_index {}'.format(best_move.row_index-1))
+                    ridrow_json = api.rid_row(best_move.row_index-1)
+                else:
+                    drop_json = api.drop(best_move_column)
+                    print('We made a drop move. {}'.format(drop_json))
 
             else:
                 print('COLUMN IS FULL')

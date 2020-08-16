@@ -36,6 +36,7 @@ class BoardHelper:
         self.__depth = depth
 
     def is_move_valid(self, colIndex, board):
+
         columnToCheck = board[:, colIndex]
         # print(columnToCheck)
         openSpot = False
@@ -56,33 +57,59 @@ class BoardHelper:
         for row in board:
             print(row)
 
+    def ridRowUsed(self, moves):
+        available = True
+        #print("moves" + moves)
+        for move in moves:
+            if move['type'] == 'ridrow':
+               available = False
+               break
+        
+        return available
+
+    def flipDiskUsed(self, moves):
+        available = True
+        #print("moves" + moves)
+        for type in moves:
+            if type == 'flipdisk':
+               available = False
+               break
+        
+        return available
+
     def rid_row_evaluation(self, board, row_index):
         board1 = copy.deepcopy(board)
         #row = board[row_index,:]
-        print("rid row eval kicked")
-    
+       # print("rid row eval kicked")
             
-        numpy.delete(board1, row_index, axis=0);
+        newBoard = numpy.delete(board1, row_index, axis=0);
+        emptyRow = numpy.array([['-', '-', '-', '-', '-', '-', '-']])
+      #  np.insert(a, 1, np.array((1, 1)), 0)
+        #newBoard = numpy.concatenate((emptyRow, board1), axis=0)
+       # newBoard = numpy.insert([board1,5, numpy.array(('-','-','-','-','-','-','-')), 0])
+        newBoard = numpy.vstack([emptyRow, newBoard])
+       # newBoard = numpy.append(board1, numpy.array([['-','-','-','-','-','-','-']]), axis=0)
         #a[np.all(a != 0, axis=1)]
-        print('ridrow attempt')
-        self.display_board(board1)
+       # print('ridrow attempt')
+       # self.display_board(newBoard)
 
-        bestMove = self.get_best_move_ridRow(board1)
+        bestMove = self.get_best_move_ridRow(newBoard)
         return bestMove
      
     def get_best_move_ridRow(self, board):
         pool = ThreadPool(processes=7)
         results = []
+        ridrow_depth = 2
 
         # Minimax evaluation
         print('checking moves if ridrow is applied')
-        proc1 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 0, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc2 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 1, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc3 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 2, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc4 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 3, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc5 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 4, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc6 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 5, self.__depth, False, self.__negative_inf, self.__positive_inf))
-        proc7 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 6, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc1 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 0, ridrow_depth, True, self.__negative_inf, self.__positive_inf))
+        proc2 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 1, ridrow_depth, True, self.__negative_inf, self.__positive_inf))
+        proc3 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 2, ridrow_depth, True, self.__negative_inf, self.__positive_inf))
+        proc4 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 3, ridrow_depth, True, self.__negative_inf, self.__positive_inf))
+        proc5 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 4, ridrow_depth, True, self.__negative_inf, self.__positive_inf))
+        proc6 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 5, ridrow_depth, True, self.__negative_inf, self.__positive_inf))
+        proc7 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 6, ridrow_depth, True, self.__negative_inf, self.__positive_inf))
 
         # Wait for the processes to finish and get results.
         result1 = proc1.get()
@@ -118,10 +145,13 @@ class BoardHelper:
 
 
         # Return column index with the best move.
-        print('Best move is for ridrow board is column {} with score {}.'.format(best_move.column_index, best_move.score))
+        print('Best move for ridrow board is column {} with score {}.'.format(best_move.column_index, best_move.score))
         return best_move
 
-    def get_best_move(self, board):
+    def get_best_move(self, board, ridRowAvailable, flipDiskAvailable):
+       # ridRowAvailable = self.ridRowUsed(moves)
+       # flipDiskAvailable = self.flipDiskUsed(moves)
+
         pool = ThreadPool(processes=7)
         results = []
 
@@ -153,6 +183,7 @@ class BoardHelper:
         result6 = proc6.get()
         result7 = proc7.get()
 
+
         # These lines are for testing only. Performs evaluations one at a time. Easier to read debug lines.
         # result1 = self.__evaluate_move(board, 0, False)
         # result2 = self.__evaluate_move(board, 1, False)
@@ -178,10 +209,15 @@ class BoardHelper:
         if result7 is not None:
             results.append(result7)
 
-        for i in range(board.shape[0]):
-            if ~numpy.all(board[i]==board[i][0]):
-                print('row filled?: ', i)
-                results.append(self.rid_row_evaluation(board,i))
+        print("ridrow value is {}".format(ridRowAvailable))
+
+        if ridRowAvailable is True:
+            for i in range(board.shape[0]):
+                if ~numpy.all(board[i]==board[i][0]):
+                   # print('row filled?: ', i)
+                    ridrowMove = self.rid_row_evaluation(board,i)
+                    ridrowMove.row_index = i
+                    results.append(ridrowMove)
 
         # Find the best move.
         best_move = None
@@ -189,9 +225,12 @@ class BoardHelper:
         for index, result in enumerate(results):
             if best_move is None or result.score > best_move.score:
                 if index==7 or index==8 or index==9:
-                    print('need to do rid row')
+                    print('current best move is rid row for row_index {}'.format(result.row_index))
+                    best_move.action = 'ridrow'
+                    best_move.row_index = result.row_index
                 else:
                     best_move = result
+                    best_move.action = None
 
         # Return column index with the best move.
         print('Best move is column {} with score {}.'.format(best_move.column_index, best_move.score))

@@ -3,6 +3,7 @@ import json
 import numpy
 
 
+
 class APIHelper:
     url = 'https://api.sg2020.540.co/fun/games'
 
@@ -36,6 +37,7 @@ class APIHelper:
     def rid_row(self, row):
         move_data = json.dumps({'data': {'type': 'ridrow', 'row': row}})
         response_json = self.__make_move(move_data)
+        print("response after rid_row: {}".format(response_json))
         return response_json
 
     def flip_disk(self, row, column):
@@ -61,7 +63,8 @@ class APIHelper:
             'board': numpy.array(r_json['data']['state']['board']),
             'winner': r_json['data']['winner'],
             'turn': r_json['data']['state']['turn'],
-            'json': r_json
+            'json': r_json,
+            'moves': r_json['data']['moves']
         }
 
         self.board = status_dictionary['board']
