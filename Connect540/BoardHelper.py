@@ -6,9 +6,9 @@ import numpy
 
 # Simple enumeration to hold scores.
 class Score(Enum):
-    CENTER = 20
+    CENTER = 5
     LINE_OF_TWO = 3
-    LINE_OF_THREE = 5
+    LINE_OF_THREE = 15
     WIN = 10000
     OPP_LINE_OF_TWO = 0
     OPP_LINE_OF_THREE = 500
@@ -87,6 +87,7 @@ class BoardHelper:
                 break
             
         return enemy_move
+
     def rid_row_evaluation(self, board, row_index):
         board1 = copy.deepcopy(board)
         #row = board[row_index,:]
@@ -274,7 +275,7 @@ class BoardHelper:
             # Base case - if we've reviewed all the levels of the tree we've specified
             # or either player wins at this move, return the value of the move.
             leaf_position = self.__evaluate_move(board, column_index, is_enemy)
-            game_over = leaf_position.score >= 10000
+            game_over = leaf_position.score >= 500
             if tree_depth == 0 or game_over:
                 # self.display_board(board)
                 # print('Hit {} leaf at column {} row {} with score {}'.format(player, leaf_position.column_index, available_row_index, leaf_position.score))
