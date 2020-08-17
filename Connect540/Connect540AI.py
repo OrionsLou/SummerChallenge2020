@@ -50,31 +50,30 @@ while poll:
             # check if move is valid
             board_helper.display_board(status['board'])
 
+            if is_flipdisk_available is False:
+                enemy_flipdisk = board_helper.enemy_flipdisk(status['moves'])
+                flip_row = enemy_flipdisk.row
+                flip_column = enemy_flipdisk.column
 
-            #ridrowUsed = board_helper.ridRowUsed(moves)
-            # if ridrowUsed is True:
-            #     print("already used ridRow")
-            # else:  
-            #     print("ridRow move available")
-            
-            # given the current board state, get the column tha has the best move.
-            # this will likely be called over and over again in minimax implementation
-            best_move = board_helper.get_best_move(current_board, is_ridrow_available,is_flipdisk_available)
-            best_move_column = best_move.column_index
-      
-
-            is_move_valid = board_helper.is_move_valid(best_move_column, current_board)
-
-            if is_move_valid:
-                if best_move.action == 'ridrow':
-                    print('We will make a ridrow move for row_index {}'.format(best_move.row_index-1))
-                    ridrow_json = api.rid_row(best_move.row_index-1)
-                else:
-                    drop_json = api.drop(best_move_column)
-                    print('We made a drop move. {}'.format(drop_json))
-
+                flipdisk_json = api.flip_disk(flip_row, flip_column)
             else:
-                print('COLUMN IS FULL')
+                # given the current board state, get the column tha has the best move.
+                # this will likely be called over and over again in minimax implementation
+                best_move = board_helper.get_best_move(current_board, is_ridrow_available)
+                best_move_column = best_move.column_index
+        
+                is_move_valid = board_helper.is_move_valid(best_move_column, current_board)
+
+                if is_move_valid:
+                    if best_move.action == 'ridrow':
+                        print('We will make a ridrow move for row_index {}'.format(best_move.row_index-1))
+                        ridrow_json = api.rid_row(best_move.row_index-1)
+                    else:
+                        drop_json = api.drop(best_move_column)
+                        print('We made a drop move. {}'.format(drop_json))
+
+                else:
+                    print('COLUMN IS FULL')
 
         # Stop execution for a certain amount of time (minus the time taken to get to this point).
         time.sleep(poll_delay - ((time.time() - start_time) % poll_delay))
