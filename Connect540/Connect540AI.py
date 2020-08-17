@@ -4,6 +4,7 @@ import time
 
 key = ''
 auth = ''
+
 opponent = 'ebot'
 official = False
 start_time = time.time()
