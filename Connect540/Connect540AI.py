@@ -1,5 +1,5 @@
-from APIHelper import APIHelper
-from BoardHelper import BoardHelper
+from Connect540.APIHelper import APIHelper
+from Connect540.BoardHelper import BoardHelper
 import time
 
 key = ''
