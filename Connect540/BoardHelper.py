@@ -69,14 +69,23 @@ class BoardHelper:
 
     def flipDiskUsed(self, moves):
         available = True
-        #print("moves" + moves)
-        for type in moves:
-            if type == 'flipdisk':
+
+        for move in moves:
+            if move == 'flipdisk' and move['player']==self.enemy_color:
                available = False
                break
         
         return available
 
+    def enemy_flipdisk(self, moves):
+        enemy_move = None
+        for move in moves:
+            if move['type'] == 'flipdisk' and move['player']==self.enemy_color:
+                enemy_move.row = move['row']
+                enemy_move.column = move['column']
+                break
+            
+        return enemy_move
     def rid_row_evaluation(self, board, row_index):
         board1 = copy.deepcopy(board)
         #row = board[row_index,:]
@@ -148,7 +157,7 @@ class BoardHelper:
         print('Best move for ridrow board is column {} with score {}.'.format(best_move.column_index, best_move.score))
         return best_move
 
-    def get_best_move(self, board, ridRowAvailable, flipDiskAvailable):
+    def get_best_move(self, board, ridRowAvailable):
        # ridRowAvailable = self.ridRowUsed(moves)
        # flipDiskAvailable = self.flipDiskUsed(moves)
 
@@ -224,7 +233,7 @@ class BoardHelper:
 
         for index, result in enumerate(results):
             if best_move is None or result.score > best_move.score:
-                if index==7 or index==8 or index==9:
+                if (index==7 or index==8 or index==9) and result.score < 500:
                     print('current best move is rid row for row_index {}'.format(result.row_index))
                     best_move.action = 'ridrow'
                     best_move.row_index = result.row_index
