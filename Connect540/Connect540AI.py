@@ -4,7 +4,7 @@ import time
 
 key = ''
 auth = ''
-opponent = 'tbot'
+opponent = 'ebot'
 official = False
 start_time = time.time()
 poll_delay = 1

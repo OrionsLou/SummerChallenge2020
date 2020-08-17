@@ -5,7 +5,7 @@ import copy
 
 # Simple enumeration to hold scores.
 class Score(Enum):
-    CENTER = 4
+    CENTER = 20
     LINE_OF_TWO = 3
     LINE_OF_THREE = 5
     WIN = 10000
