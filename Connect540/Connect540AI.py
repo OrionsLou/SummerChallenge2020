@@ -54,25 +54,26 @@ while poll:
                 enemy_flipdisk = board_helper.enemy_flipdisk(status['moves'])
                 flip_row = enemy_flipdisk.row
                 flip_column = enemy_flipdisk.column
+
                 flipdisk_json = api.flip_disk(flip_row, flip_column)
-
-            # given the current board state, get the column tha has the best move.
-            # this will likely be called over and over again in minimax implementation
-            best_move = board_helper.get_best_move(current_board, is_ridrow_available)
-            best_move_column = best_move.column_index
-      
-            is_move_valid = board_helper.is_move_valid(best_move_column, current_board)
-
-            if is_move_valid:
-                if best_move.action == 'ridrow':
-                    print('We will make a ridrow move for row_index {}'.format(best_move.row_index-1))
-                    ridrow_json = api.rid_row(best_move.row_index-1)
-                else:
-                    drop_json = api.drop(best_move_column)
-                    print('We made a drop move. {}'.format(drop_json))
-
             else:
-                print('COLUMN IS FULL')
+                # given the current board state, get the column tha has the best move.
+                # this will likely be called over and over again in minimax implementation
+                best_move = board_helper.get_best_move(current_board, is_ridrow_available)
+                best_move_column = best_move.column_index
+        
+                is_move_valid = board_helper.is_move_valid(best_move_column, current_board)
+
+                if is_move_valid:
+                    if best_move.action == 'ridrow':
+                        print('We will make a ridrow move for row_index {}'.format(best_move.row_index-1))
+                        ridrow_json = api.rid_row(best_move.row_index-1)
+                    else:
+                        drop_json = api.drop(best_move_column)
+                        print('We made a drop move. {}'.format(drop_json))
+
+                else:
+                    print('COLUMN IS FULL')
 
         # Stop execution for a certain amount of time (minus the time taken to get to this point).
         time.sleep(poll_delay - ((time.time() - start_time) % poll_delay))
