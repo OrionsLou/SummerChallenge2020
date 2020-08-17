@@ -1,10 +1,11 @@
 from multiprocessing.pool import ThreadPool
 from enum import Enum
+import copy
 
 
 # Simple enumeration to hold scores.
 class Score(Enum):
-    CENTER = 4
+    CENTER = 20
     LINE_OF_TWO = 3
     LINE_OF_THREE = 5
     WIN = 10000
@@ -21,7 +22,7 @@ class Result:
 
 class BoardHelper:
 
-    def __init__(self, color):
+    def __init__(self, color, depth):
         self.color = 'R' if color == 'red' else 'Y'
         self.enemy_color = 'Y' if color == 'red' else 'R'
 
@@ -29,6 +30,10 @@ class BoardHelper:
         self.max_num_cells = 42
         self.max_row_index = 6
         self.max_col_index = 5
+
+        self.__negative_inf = -999999
+        self.__positive_inf = 999999
+        self.__depth = depth
 
     def is_move_valid(self, colIndex, board):
         columnToCheck = board[:, colIndex]
@@ -55,14 +60,24 @@ class BoardHelper:
         pool = ThreadPool(processes=7)
         results = []
 
-        # Spawn 7 processes to evaluate all columns concurrently.
-        proc1 = pool.apply_async(self.__evaluate_move, (board, 0))
-        proc2 = pool.apply_async(self.__evaluate_move, (board, 1))
-        proc3 = pool.apply_async(self.__evaluate_move, (board, 2))
-        proc4 = pool.apply_async(self.__evaluate_move, (board, 3))
-        proc5 = pool.apply_async(self.__evaluate_move, (board, 4))
-        proc6 = pool.apply_async(self.__evaluate_move, (board, 5))
-        proc7 = pool.apply_async(self.__evaluate_move, (board, 6))
+        # Non-minimax evaluation
+        # proc1 = pool.apply_async(self.__evaluate_move, (board, 0, False))
+        # proc2 = pool.apply_async(self.__evaluate_move, (board, 1, False))
+        # proc3 = pool.apply_async(self.__evaluate_move, (board, 2, False))
+        # proc4 = pool.apply_async(self.__evaluate_move, (board, 3, False))
+        # proc5 = pool.apply_async(self.__evaluate_move, (board, 4), False)
+        # proc6 = pool.apply_async(self.__evaluate_move, (board, 5), False)
+        # proc7 = pool.apply_async(self.__evaluate_move, (board, 6, False))
+
+        # Minimax evaluation
+        print('Getting next set of moves')
+        proc1 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 0, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc2 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 1, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc3 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 2, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc4 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 3, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc5 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 4, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc6 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 5, self.__depth, False, self.__negative_inf, self.__positive_inf))
+        proc7 = pool.apply_async(self.__evaluate_move_minimax, (copy.deepcopy(board), 6, self.__depth, False, self.__negative_inf, self.__positive_inf))
 
         # Wait for the processes to finish and get results.
         result1 = proc1.get()
@@ -74,13 +89,13 @@ class BoardHelper:
         result7 = proc7.get()
 
         # These lines are for testing only. Performs evaluations one at a time. Easier to read debug lines.
-        # result1 = self.__evaluate_move(board, 0)
-        # result2 = self.__evaluate_move(board, 1)
-        # result3 = self.__evaluate_move(board, 2)
-        # result4 = self.__evaluate_move(board, 3)
-        # result5 = self.__evaluate_move(board, 4)
-        # result6 = self.__evaluate_move(board, 5)
-        # result7 = self.__evaluate_move(board, 6)
+        # result1 = self.__evaluate_move(board, 0, False)
+        # result2 = self.__evaluate_move(board, 1, False)
+        # result3 = self.__evaluate_move(board, 2, False)
+        # result4 = self.__evaluate_move(board, 3, False)
+        # result5 = self.__evaluate_move(board, 4, False)
+        # result6 = self.__evaluate_move(board, 5, False)
+        # result7 = self.__evaluate_move(board, 6, False)
 
         # Don't review results where the move is invalid (no result)
         if result1 is not None:
@@ -106,21 +121,89 @@ class BoardHelper:
 
         # Return column index with the best move.
         print('Best move is column {} with score {}.'.format(best_move.column_index, best_move.score))
-        return best_move.column_index
+        return best_move
 
-    def __evaluate_move(self, board, column_index):
+    def __evaluate_move(self, board, column_index, is_enemy):
         score = 0
 
         if self.is_move_valid(column_index, board):
-            # LOGIC GOES HERE. For example, if center move then add a certain amount of points.
+
+            # Add bonus points for center move
             if column_index == 3:
                 score += Score.CENTER.value
 
-            score += self.__calculate_score(board, column_index, False)
+            # Otherwise, determine the value of dropping a disc in this column.
+            score += self.__calculate_score(board, column_index, is_enemy)
+
         else:
             return None
 
         return Result(column_index, score)
+
+    def __evaluate_move_minimax(self, board, column_index, tree_depth, is_enemy, alpha, beta):
+        # Determine whether or not this column has an open space
+        available_row_index = self.__get_drop_row_index(board, column_index)
+        if available_row_index is not None:
+
+            # Determine which player this move belongs to
+            player = self.enemy_color if is_enemy else self.color
+
+            # Base case - if we've reviewed all the levels of the tree we've specified
+            # or either player wins at this move, return the value of the move.
+            leaf_position = self.__evaluate_move(board, column_index, is_enemy)
+            game_over = leaf_position.score >= 10000
+            if tree_depth == 0 or game_over:
+                # self.display_board(board)
+                # print('Hit {} leaf at column {} row {} with score {}'.format(player, leaf_position.column_index, available_row_index, leaf_position.score))
+                return leaf_position
+
+            # Update the board as if the current player has made the move.
+            board[available_row_index, column_index] = player
+
+            # print("-------------------------------------------")
+            # print("Review {} move at column {} at depth {}".format(player, column_index, tree_depth))
+            # self.display_board(board)
+            # print("-------------------------------------------")
+
+            # Review available moves for our AI, the maximizing player
+            if not is_enemy:
+                best_position = Result(None, self.__negative_inf)
+                alpha = self.__negative_inf
+
+                for x in range(0, 7):
+                    max_eval_position = self.__evaluate_move_minimax(board, x, tree_depth - 1, True, alpha, beta)
+
+                    if max_eval_position is not None:
+                        if max_eval_position.score >= best_position.score:
+                            best_position = max_eval_position
+
+                        alpha = max(alpha, max_eval_position.score)
+                        if beta <= alpha:
+                            # print("Maximizing pruned. eval = {} beta = {} alpha = {}".format(max_eval_position.score, beta, alpha))
+                            break
+
+                board[available_row_index, column_index] = '-'
+                # print('Best position for {} is column {} with score {}'.format(player, best_position.column_index, best_position.score))
+                return best_position
+
+            # Else review available moves for the enemy, the minimizing player
+            else:
+                worst_position = Result(None, self.__positive_inf)
+                for x in range(0, 7):
+                    min_eval_position = self.__evaluate_move_minimax(board, x,  tree_depth - 1, False, alpha, beta)
+
+                    if min_eval_position is not None:
+                        if min_eval_position.score <= worst_position.score:
+                            worst_position = min_eval_position
+
+                        beta = min(beta, min_eval_position.score)
+                        if beta <= alpha:
+                            # print("Minimizing pruned. eval = {} beta = {} alpha = {}".format(min_eval_position.score, beta, alpha))
+                            break
+
+                board[available_row_index, column_index] = '-'
+                # print('Worst position for {} is column {} with score {}'.format(player, worst_position.column_index, worst_position.score))
+                return worst_position
 
     def __calculate_score(self, board, column_index, is_enemy):
         score = 0
@@ -152,7 +235,7 @@ class BoardHelper:
         # This returns the index a piece would fall to if dropped at this column.
         column = board[:, column_index]
 
-        row_index = 0
+        row_index = None
         for x in range(0, column.size):
             if column[x] == '-':
                 row_index = x
